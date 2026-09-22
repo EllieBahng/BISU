@@ -111,6 +111,7 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 
 // ── 全部问题数据 ──
 const Q = {
+  intro:{ id:'intro', type:'intro', next:'start' },
   start:{ id:'start', text:'你的姓名', subtext:'必填', type:'text', placeholder:'请输入真实姓名', next:'start_class', required:true },
   start_class:{ id:'start_class', text:'你的班级', subtext:'必填', type:'text', placeholder:'例如：23级日语1班', next:'q1', required:true },
   q1:{ id:'q1', text:'你现在的方向是？', type:'single', options:[
@@ -148,7 +149,7 @@ const Q = {
     {label:'家里支持，想体验海外生活'},{label:'想拿海外学历回来找更好的工作'},
     {label:'目标院校 / 专业在海外'},{label:'还没想清楚'},{label:'其他',input:true}
   ]},
-  qb3:{ id:'qb3', section:'B 线 · 出国', text:'现在进展到哪一步了？', type:'single', next:'qb4', options:[
+  qb3:{ id:'qb3', section:'B 线 · 出国', text:'现在进展到哪一步了？', type:'multi', next:'qb4', options:[
     {label:'语言考试已通过（托福 / 雅思 / JLPT N1 等）'},{label:'正在备考语言'},
     {label:'在了解申请流程，还没开始备考'},{label:'基本什么都没开始'}
   ]},
@@ -184,7 +185,7 @@ const Q = {
     {label:'担心自己经历不够、竞争不过别人'},{label:'看到周围人都在动，自己很焦虑但不知道从哪开始'},
     {label:'已经找到一些机会，但不知道好不好、该不该投'},{label:'其他',input:true}
   ]},
-  qc6:{ id:'qc6', section:'C 线 · 找工作', text:'现在实际在做什么？', type:'single', next:'qc7', options:[
+  qc6:{ id:'qc6', section:'C 线 · 找工作', text:'现在实际在做什么？', type:'multi', next:'qc7', options:[
     {label:'已经在投简历 / 参加面试'},{label:'目前在实习中'},{label:'在做准备（写简历 / 研究岗位）'},
     {label:'偶尔刷招聘软件，没有系统去做'},{label:'什么都还没开始'}
   ]},
@@ -211,7 +212,7 @@ const Q = {
     {label:'3分——时常焦虑，想到就有点慌'},{label:'4分——比较焦虑，经常想但找不到方向'},
     {label:'5分——非常焦虑，不知道自己该怎么办'}
   ]},
-  qend2:{ id:'qend2', section:'最后三题', text:'王老师随时都很想和大家聊聊，线上线下都可以，没有人来找她的日子她会很伤心的。', subtext:'你可以直接联系她：___（老师填写联系方式）', type:'single', next:'qend2a', options:[
+  qend2:{ id:'qend2', section:'最后三题', text:'王老师随时都很想和大家聊聊，线上线下都可以，没有人来找她的日子她会很伤心的。', subtext:'你可以直接联系她：18810135328（微信同号）', type:'single', next:'qend2a', options:[
     {label:'想！有些话想和老师聊，老师来找我'},
     {label:'可以，老师方便的时候联系我'},
     {label:'暂时不需要，有需要我会主动找老师'}
@@ -240,6 +241,22 @@ function show(id) {
     renderDone(); return;
   }
   const q = Q[id]; if (!q) return;
+
+  if (q.type === 'intro') {
+    document.getElementById('pFill').style.width = '0%';
+    document.getElementById('backBtn').disabled = true;
+    document.getElementById('content').innerHTML = `
+      <div class="fade-in">
+        <div class="q-text" style="font-size:22px;margin-bottom:18px;">北二外日语学院23届状况问卷</div>
+        <div style="font-size:15px;color:#555;line-height:1.9;margin-bottom:28px;">
+          这不是测试，填什么都没有对错之分。<br>
+          你现在考研也好、找工作也好、完全没想好也完全没关系——填得越真实，我们能帮到你的就越多。<br><br>
+          <span style="color:#2d6a9f;">信息严格保密，不会对外泄露。</span>
+        </div>
+        <div class="btn-row"><button class="btn btn-primary" onclick="show('start')">开始填写 →</button></div>
+      </div>`;
+    return;
+  }
   document.getElementById('pFill').style.width = Math.min(96, navHistory.length / TOTAL * 100) + '%';
   document.getElementById('backBtn').disabled = navHistory.length === 0;
   const prev = answers[id];
@@ -395,7 +412,7 @@ async function doSubmit() {
   } catch(e) { console.error(e); }
 }
 
-show('start');
+show('intro');
 </script>
 </body>
 </html>
