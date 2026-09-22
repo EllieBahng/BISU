@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>问卷结果 · 老师查看</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: '宋体', SimSun, serif; background: #f0f4f8; min-height: 100vh; }
+
+/* 登录页 */
+.login-wrap {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 100vh; padding: 20px;
+}
+.login-card {
+  background: #fff; border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(45,106,159,0.12);
+  padding: 40px 36px; width: 100%; max-width: 380px; text-align: center;
+}
+.login-title { font-size: 20px; font-weight: bold; color: #1a2b3c; margin-bottom: 8px; }
+.login-sub { font-size: 13px; color: #999; margin-bottom: 28px; }
+.login-input {
+  width: 100%; border: 1.5px solid #e0e7ef; border-radius: 10px;
+  padding: 12px 16px; font-size: 15px; outline: none; font-family: inherit;
+  margin-bottom: 16px; transition: border-color 0.2s;
+}
+.login-input:focus { border-color: #2d6a9f; }
+.login-btn {
+  width: 100%; background: #2d6a9f; color: #fff; border: none;
+  border-radius: 10px; padding: 13px; font-size: 15px; font-family: inherit;
+  font-weight: bold; cursor: pointer; transition: background 0.15s;
+}
+.login-btn:hover { background: #235a8a; }
+.login-err { color: #e05; font-size: 13px; margin-top: 10px; }
+
+/* 主页面 */
+.main-wrap { display: none; padding: 24px; max-width: 1100px; margin: 0 auto; }
+.page-title { font-size: 22px; font-weight: bold; color: #1a2b3c; margin-bottom: 20px; }
+
+/* 统计卡片 */
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr)); gap: 14px; margin-bottom: 24px; }
+.stat-card {
+  background: #fff; border-radius: 12px; padding: 18px 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+.stat-label { font-size: 12px; color: #888; margin-bottom: 6px; }
+.stat-value { font-size: 28px; font-weight: bold; color: #2d6a9f; }
+.stat-sub { font-size: 12px; color: #aaa; margin-top: 4px; }
+
+/* 筛选 */
+.filter-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+.filter-btn {
+  padding: 6px 16px; border-radius: 20px; border: 1.5px solid #e0e7ef;
+  font-size: 13px; cursor: pointer; font-family: inherit;
+  background: #fff; color: #555; transition: all 0.15s;
+}
+.filter-btn:hover { border-color: #2d6a9f; color: #2d6a9f; }
+.filter-btn.active { background: #2d6a9f; border-color: #2d6a9f; color: #fff; }
+
+/* 表格 */
+.table-wrap { background: #fff; border-radius: 14px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); overflow: hidden; }
+.table-head {
+  display: grid; grid-template-columns: 80px 100px 110px 90px 110px 120px 44px;
+  padding: 12px 16px; background: #f7f9fc; font-size: 12px;
+  color: #888; font-weight: bold; border-bottom: 1px solid #edf1f5;
+}
+.table-row {
+  display: grid; grid-template-columns: 80px 100px 110px 90px 110px 120px 44px;
+  padding: 14px 16px; border-bottom: 1px solid #f0f4f8;
+  align-items: center; transition: background 0.1s; cursor: pointer;
+}
+.table-row:hover { background: #f8fafe; }
+.table-row:last-child { border-bottom: none; }
+.cell { font-size: 14px; color: #333; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-right: 8px; }
+.cell-name { font-weight: bold; color: #1a2b3c; }
+
+.badge {
+  display: inline-block; font-size: 12px; padding: 2px 10px;
+  border-radius: 20px; white-space: nowrap;
+}
+.badge-考研 { background: #e8f4fd; color: #1a6ea8; }
+.badge-就业 { background: #e8fdf0; color: #1a7a42; }
+.badge-出国 { background: #fdf4e8; color: #a87c1a; }
+.badge-未定 { background: #f4e8fd; color: #7c1aa8; }
+.badge-多线 { background: #fde8e8; color: #a81a1a; }
+.badge-default { background: #f0f4f8; color: #666; }
+
+.anxiety-dot {
+  display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: middle;
+}
+.a1 { background: #52c41a; } .a2 { background: #a0d911; } .a3 { background: #faad14; } .a4 { background: #ff7a45; } .a5 { background: #f5222d; }
+
+.chat-icon { font-size: 16px; }
+.expand-btn { background: none; border: none; cursor: pointer; color: #aaa; font-size: 18px; padding: 2px 6px; transition: color 0.15s; }
+.expand-btn:hover { color: #2d6a9f; }
+
+/* 详情展开 */
+.detail-row { display: none; background: #f8fafe; border-bottom: 1px solid #edf1f5; }
+.detail-row.open { display: block; }
+.detail-inner { padding: 16px 20px 20px; }
+.detail-section { margin-bottom: 16px; }
+.detail-section-title { font-size: 12px; font-weight: bold; color: #2d6a9f; margin-bottom: 8px; text-transform: uppercase; }
+.detail-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 8px; }
+.detail-item { background: #fff; border-radius: 8px; padding: 10px 12px; }
+.detail-q { font-size: 12px; color: #888; margin-bottom: 4px; }
+.detail-a { font-size: 14px; color: #1a2b3c; line-height: 1.5; }
+.empty { text-align: center; padding: 48px; color: #bbb; font-size: 15px; }
+
+@media (max-width: 700px) {
+  .table-head, .table-row { grid-template-columns: 80px 90px 90px 1fr 44px; }
+  .col-anxiety, .col-contact { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- 登录 -->
+<div class="login-wrap" id="loginWrap">
+  <div class="login-card">
+    <div class="login-title">问卷结果查看</div>
+    <div class="login-sub">请输入访问密码</div>
+    <input type="password" class="login-input" id="pwInput" placeholder="密码" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="login-btn" onclick="doLogin()">进入</button>
+    <div class="login-err" id="loginErr"></div>
+  </div>
+</div>
+
+<!-- 主页面 -->
+<div class="main-wrap" id="mainWrap">
+  <div class="page-title">同学状态摸底 · 结果汇总</div>
+
+  <div class="stats-grid" id="statsGrid"></div>
+
+  <div class="filter-row" id="filterRow">
+    <button class="filter-btn active" onclick="setFilter('全部')">全部</button>
+    <button class="filter-btn" onclick="setFilter('考研')">考研</button>
+    <button class="filter-btn" onclick="setFilter('就业')">就业</button>
+    <button class="filter-btn" onclick="setFilter('出国')">出国</button>
+    <button class="filter-btn" onclick="setFilter('未定')">还没想好</button>
+    <button class="filter-btn" onclick="setFilter('约谈')">希望约谈 🔔</button>
+  </div>
+
+  <div class="table-wrap">
+    <div class="table-head">
+      <div>姓名</div><div>班级</div><div>方向</div>
+      <div class="col-anxiety">焦虑程度</div>
+      <div>约谈意向</div>
+      <div class="col-contact">联系方式</div>
+      <div></div>
+    </div>
+    <div id="tableBody"></div>
+  </div>
+</div>
+
+<script>
+const QLABELS = {
+  start:'姓名', start_class:'班级', q1:'方向',
+  qa1:'考研方向', qa2:'备考时长', qa3:'每日时长', qa4:'备考困难', qa5:'考研原因', qa6:'希望老师帮（考研）',
+  qb1:'目标地区', qb2:'留学原因', qb3:'出国进展', qb4:'出国卡点', qb5:'希望老师帮（出国）',
+  qc1:'工作期待', qc2:'公司偏好', qc3:'岗位认知', qc3a:'目标岗位', qc4:'就业认知', qc5:'求职困惑', qc6:'当前状态', qc7:'希望老师帮（就业）',
+  qd1:'纠结内容', qd2:'未决原因', qd3:'决策需求',
+  qend1:'焦虑程度', qend2:'约谈意向', qend2a:'联系方式', qend3:'留言'
+};
+
+const SECTIONS = {
+  A:['qa1','qa2','qa3','qa4','qa5','qa6'],
+  B:['qb1','qb2','qb3','qb4','qb5'],
+  C:['qc1','qc2','qc3','qc3a','qc4','qc5','qc6','qc7'],
+  D:['qd1','qd2','qd3'],
+  END:['qend1','qend2','qend2a','qend3']
+};
+
+const SECTION_NAMES = { A:'考研', B:'出国', C:'找工作', D:'还没想好', END:'最后三题' };
+
+let allData = [], currentFilter = '全部';
+
+function answerToStr(v) {
+  if (!v && v !== 0) return '—';
+  if (typeof v === 'string') return v || '—';
+  if (Array.isArray(v)) {
+    const s = v.map(i => i.inputVal ? `${i.label}：${i.inputVal}` : i.label).join('；');
+    return s || '—';
+  }
+  if (v.label) return v.inputVal ? `${v.label}：${v.inputVal}` : v.label;
+  return '—';
+}
+
+function getDirectionKey(d) {
+  if (!d) return 'default';
+  if (d.includes('考研')) return '考研';
+  if (d.includes('就业') || d.includes('工作')) return '就业';
+  if (d.includes('出国') || d.includes('留学')) return '出国';
+  if (d.includes('多个') || d.includes('推进')) return '多线';
+  return '未定';
+}
+
+function getAnxietyNum(a) {
+  const m = a?.match?.(/^(\d)/);
+  return m ? parseInt(m[1]) : 0;
+}
+
+function wantsChat(w) {
+  if (!w) return false;
+  return w.includes('想') || w.includes('可以');
+}
+
+async function doLogin() {
+  const pw = document.getElementById('pwInput').value.trim();
+  if (!pw) return;
+  const res = await fetch(`/api/results?pw=${encodeURIComponent(pw)}`);
+  if (res.status === 401) {
+    document.getElementById('loginErr').textContent = '密码不对，再试试';
+    return;
+  }
+  const data = await res.json();
+  allData = data;
+  document.getElementById('loginWrap').style.display = 'none';
+  document.getElementById('mainWrap').style.display = 'block';
+  renderStats();
+  renderTable(allData);
+}
+
+function renderStats() {
+  const total = allData.length;
+  const byDir = {};
+  let totalAnxiety = 0, anxCount = 0, chatCount = 0;
+  allData.forEach(r => {
+    const dk = getDirectionKey(r.direction);
+    byDir[dk] = (byDir[dk]||0) + 1;
+    const n = getAnxietyNum(r.anxiety_level);
+    if (n > 0) { totalAnxiety += n; anxCount++; }
+    if (wantsChat(r.wants_chat)) chatCount++;
+  });
+  const avgA = anxCount > 0 ? (totalAnxiety/anxCount).toFixed(1) : '—';
+  document.getElementById('statsGrid').innerHTML = `
+    <div class="stat-card"><div class="stat-label">总提交</div><div class="stat-value">${total}</div><div class="stat-sub">份</div></div>
+    <div class="stat-card"><div class="stat-label">考研</div><div class="stat-value">${byDir['考研']||0}</div><div class="stat-sub">人</div></div>
+    <div class="stat-card"><div class="stat-label">就业</div><div class="stat-value">${byDir['就业']||0}</div><div class="stat-sub">人</div></div>
+    <div class="stat-card"><div class="stat-label">出国</div><div class="stat-value">${byDir['出国']||0}</div><div class="stat-sub">人</div></div>
+    <div class="stat-card"><div class="stat-label">还没想好</div><div class="stat-value">${byDir['未定']||0}</div><div class="stat-sub">人</div></div>
+    <div class="stat-card"><div class="stat-label">平均焦虑</div><div class="stat-value">${avgA}</div><div class="stat-sub">/ 5分</div></div>
+    <div class="stat-card"><div class="stat-label">希望约谈</div><div class="stat-value" style="color:#e07">${chatCount}</div><div class="stat-sub">人</div></div>
+  `;
+}
+
+function setFilter(f) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  let filtered = allData;
+  if (f === '考研') filtered = allData.filter(r => getDirectionKey(r.direction) === '考研');
+  else if (f === '就业') filtered = allData.filter(r => getDirectionKey(r.direction) === '就业');
+  else if (f === '出国') filtered = allData.filter(r => getDirectionKey(r.direction) === '出国');
+  else if (f === '未定') filtered = allData.filter(r => getDirectionKey(r.direction) === '未定');
+  else if (f === '约谈') filtered = allData.filter(r => wantsChat(r.wants_chat));
+  renderTable(filtered);
+}
+
+function renderTable(data) {
+  if (!data.length) {
+    document.getElementById('tableBody').innerHTML = '<div class="empty">暂无数据</div>';
+    return;
+  }
+  document.getElementById('tableBody').innerHTML = data.map((r, i) => {
+    const dk = getDirectionKey(r.direction);
+    const an = getAnxietyNum(r.anxiety_level);
+    const aClass = an > 0 ? `a${an}` : '';
+    const chatEmoji = !r.wants_chat || r.wants_chat === '—' ? '' :
+      r.wants_chat.includes('想') ? '🔔 想聊' :
+      r.wants_chat.includes('可以') ? '💬 可以' : '📵 暂不';
+    return `
+      <div>
+        <div class="table-row" onclick="toggleDetail(${i})">
+          <div class="cell cell-name">${r.name||'匿名'}</div>
+          <div class="cell">${r.class_name||'—'}</div>
+          <div class="cell"><span class="badge badge-${dk}">${r.direction||'—'}</span></div>
+          <div class="cell col-anxiety">
+            ${an > 0 ? `<span class="anxiety-dot ${aClass}"></span>${an}分` : '—'}
+          </div>
+          <div class="cell">${chatEmoji||'—'}</div>
+          <div class="cell col-contact">${r.contact||'—'}</div>
+          <div class="cell"><button class="expand-btn" id="ebtn${i}">▼</button></div>
+        </div>
+        <div class="detail-row" id="detail${i}">
+          <div class="detail-inner">${buildDetail(r)}</div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function buildDetail(r) {
+  const fa = r.full_answers || {};
+  let html = '';
+  Object.entries(SECTIONS).forEach(([key, qids]) => {
+    const items = qids.map(qid => {
+      const val = fa[qid];
+      const str = answerToStr(val);
+      if (str === '—' || !str) return null;
+      return `<div class="detail-item"><div class="detail-q">${QLABELS[qid]||qid}</div><div class="detail-a">${str}</div></div>`;
+    }).filter(Boolean);
+    if (items.length) {
+      html += `<div class="detail-section">
+        <div class="detail-section-title">${SECTION_NAMES[key]}</div>
+        <div class="detail-grid">${items.join('')}</div>
+      </div>`;
+    }
+  });
+  if (r.message && r.message !== '—') {
+    html += `<div class="detail-section"><div class="detail-section-title">留言</div><div class="detail-grid">
+      <div class="detail-item"><div class="detail-a">${r.message}</div></div>
+    </div></div>`;
+  }
+  return html || '<div style="color:#aaa;font-size:13px">无详细数据</div>';
+}
+
+function toggleDetail(i) {
+  const d = document.getElementById('detail'+i);
+  const b = document.getElementById('ebtn'+i);
+  const open = d.classList.toggle('open');
+  b.textContent = open ? '▲' : '▼';
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>同学状态摸底问卷</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: '宋体', SimSun, serif;
+  background: linear-gradient(135deg, #e8f0fe 0%, #f0f4f8 100%);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+.card {
+  background: #fff;
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(45,106,159,0.12);
+  width: 100%;
+  max-width: 500px;
+  padding: 36px 30px 30px;
+  position: relative;
+  min-height: 400px;
+}
+.top-bar { display: flex; align-items: center; margin-bottom: 24px; gap: 12px; }
+.back-btn {
+  background: none; border: none; color: #bbb; font-size: 20px;
+  cursor: pointer; padding: 2px 8px; border-radius: 6px;
+  transition: all 0.15s; font-family: inherit; flex-shrink: 0;
+}
+.back-btn:hover { background: #f0f4f8; color: #555; }
+.back-btn:disabled { opacity: 0; pointer-events: none; }
+.progress-wrap { flex: 1; height: 5px; background: #e8edf2; border-radius: 3px; overflow: hidden; }
+.progress-fill { height: 100%; background: linear-gradient(90deg,#2d6a9f,#5b9fd4); border-radius: 3px; transition: width 0.4s ease; }
+.section-badge {
+  display: inline-block; background: #eef4fb; color: #2d6a9f;
+  font-size: 12px; padding: 3px 12px; border-radius: 20px;
+  margin-bottom: 14px; font-weight: bold;
+}
+.q-text { font-size: 19px; font-weight: bold; color: #1a2b3c; line-height: 1.55; margin-bottom: 6px; }
+.q-sub { font-size: 13px; color: #999; margin-bottom: 20px; line-height: 1.5; }
+.options { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
+.option {
+  border: 1.5px solid #e4eaf2; border-radius: 12px; padding: 13px 16px;
+  cursor: pointer; transition: all 0.15s; font-size: 15px; color: #333;
+  line-height: 1.4; user-select: none;
+}
+.option:hover { border-color: #2d6a9f; background: #f5f9ff; }
+.option.selected { border-color: #2d6a9f; background: #eef4fb; color: #1a5080; }
+.cb {
+  width: 18px; height: 18px; border: 2px solid #ccc; border-radius: 4px;
+  display: inline-flex; align-items: center; justify-content: center;
+  flex-shrink: 0; transition: all 0.15s; vertical-align: middle; margin-right: 10px;
+}
+.option.selected .cb { background: #2d6a9f; border-color: #2d6a9f; }
+.cb svg { display: none; }
+.option.selected .cb svg { display: block; }
+.opt-label { vertical-align: middle; }
+.other-input {
+  display: none; width: 100%; margin-top: 8px; border: none;
+  border-bottom: 1.5px solid #2d6a9f; outline: none; font-size: 14px;
+  padding: 4px 0; background: transparent; font-family: inherit; color: #333;
+}
+.option.selected .other-input { display: block; }
+.text-input {
+  width: 100%; border: none; border-bottom: 2px solid #e0e7ef; outline: none;
+  font-size: 16px; padding: 10px 0; margin-top: 8px; font-family: inherit;
+  color: #1a2b3c; background: transparent; transition: border-color 0.2s;
+}
+.text-input:focus { border-bottom-color: #2d6a9f; }
+textarea.text-input {
+  border: 1.5px solid #e0e7ef; border-radius: 10px; padding: 12px;
+  resize: vertical; min-height: 110px; font-size: 15px; display: block;
+}
+textarea.text-input:focus { border-color: #2d6a9f; }
+.btn-row { display: flex; gap: 10px; margin-top: 28px; }
+.btn {
+  flex: 1; padding: 13px; border-radius: 12px; border: none; font-size: 15px;
+  cursor: pointer; font-family: inherit; font-weight: bold; transition: all 0.15s;
+}
+.btn-primary { background: #2d6a9f; color: #fff; }
+.btn-primary:hover { background: #235a8a; transform: translateY(-1px); }
+.btn-skip { background: #f0f4f8; color: #aaa; font-weight: normal; }
+.btn-skip:hover { background: #e4eaf0; color: #888; }
+.done-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 0 20px; text-align: center; }
+.done-icon {
+  width: 72px; height: 72px; background: linear-gradient(135deg,#2d6a9f,#5b9fd4);
+  border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 24px;
+}
+.done-title { font-size: 22px; font-weight: bold; color: #1a2b3c; margin-bottom: 10px; }
+.done-sub { font-size: 14px; color: #888; line-height: 1.7; }
+.fade-in { animation: fadeUp 0.25s ease both; }
+@keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="top-bar">
+    <button class="back-btn" id="backBtn" onclick="goBack()" disabled>←</button>
+    <div class="progress-wrap"><div class="progress-fill" id="pFill" style="width:0%"></div></div>
+  </div>
+  <div id="content"></div>
+</div>
+<script>
+// ── Supabase 配置（部署时替换这两行）──
+const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY';
+
+// ── 全部问题数据 ──
+const Q = {
+  start:{ id:'start', text:'你的姓名', subtext:'必填', type:'text', placeholder:'请输入真实姓名', next:'start_class', required:true },
+  start_class:{ id:'start_class', text:'你的班级', subtext:'必填', type:'text', placeholder:'例如：23级日语1班', next:'q1', required:true },
+  q1:{ id:'q1', text:'你现在的方向是？', type:'single', options:[
+    {label:'国内考研',next:'qa1'},{label:'出国 / 留学',next:'qb1'},
+    {label:'找工作 / 实习',next:'qc1'},{label:'多个方向同时在推进',next:'qc1'},{label:'还没想好',next:'qd1'}
+  ]},
+  qa1:{ id:'qa1', section:'A 线 · 考研', text:'想考的方向是？', type:'single', next:'qa2', options:[
+    {label:'日语相关（语言文学 / 翻译 / 日本研究）'},{label:'传播 / 新闻 / 教育类'},
+    {label:'商科 / 管理类'},{label:'其他跨专业',input:true},{label:'还没确定'}
+  ]},
+  qa2:{ id:'qa2', section:'A 线 · 考研', text:'备考多久了？', type:'single', next:'qa3', options:[
+    {label:'还没开始，刚决定'},{label:'不到3个月'},{label:'3-6个月'},{label:'半年以上'}
+  ]},
+  qa3:{ id:'qa3', section:'A 线 · 考研', text:'每天大概花多少时间备考？', type:'single', next:'qa4', options:[
+    {label:'几乎没有，还没进入状态'},{label:'1-2小时'},{label:'3小时以上'},{label:'时间不固定，状态时好时坏'}
+  ]},
+  qa4:{ id:'qa4', section:'A 线 · 考研', text:'备考最大的困难是？', type:'multi', next:'qa5', options:[
+    {label:'不知道报哪所学校 / 专业'},{label:'不知道怎么制定复习计划'},{label:'自律问题，坚持不下来'},
+    {label:'英语或政治基础太差'},{label:'心态问题，焦虑 / 怕失败'},{label:'家里或周围人不支持'},{label:'其他',input:true}
+  ]},
+  qa5:{ id:'qa5', section:'A 线 · 考研', text:'考研最主要的原因是？', type:'multi', next:'qa6', options:[
+    {label:'对学术 / 这个研究方向真的感兴趣'},{label:'想提升学历，去更好的平台'},
+    {label:'不想这么快面对找工作'},{label:'周围人都在考，跟着走'},{label:'其他',input:true}
+  ]},
+  qa6:{ id:'qa6', section:'A 线 · 考研', text:'希望老师帮你什么？', type:'multi', next:'qend1', options:[
+    {label:'推荐目标院校 / 了解专业信息'},{label:'联系已考上的学长学姐'},
+    {label:'心态上的支持和鼓励'},{label:'不需要，自己能搞定'},{label:'其他',input:true}
+  ]},
+  qb1:{ id:'qb1', section:'B 线 · 出国', text:'目标地区？', type:'single', next:'qb2', options:[
+    {label:'日本'},{label:'英国 / 美国 / 澳大利亚 / 加拿大'},{label:'香港 / 澳门 / 台湾'},
+    {label:'欧洲（非英语国家）'},{label:'还没确定'},{label:'其他',input:true}
+  ]},
+  qb2:{ id:'qb2', section:'B 线 · 出国', text:'去留学的主要原因？', type:'multi', next:'qb3', options:[
+    {label:'语言优势，想去对口的国家深造'},{label:'国内考研竞争太激烈，出国相对容易'},
+    {label:'家里支持，想体验海外生活'},{label:'想拿海外学历回来找更好的工作'},
+    {label:'目标院校 / 专业在海外'},{label:'还没想清楚'},{label:'其他',input:true}
+  ]},
+  qb3:{ id:'qb3', section:'B 线 · 出国', text:'现在进展到哪一步了？', type:'single', next:'qb4', options:[
+    {label:'语言考试已通过（托福 / 雅思 / JLPT N1 等）'},{label:'正在备考语言'},
+    {label:'在了解申请流程，还没开始备考'},{label:'基本什么都没开始'}
+  ]},
+  qb4:{ id:'qb4', section:'B 线 · 出国', text:'最大的卡点是？', type:'multi', next:'qb5', options:[
+    {label:'不知道申请哪所学校 / 专业'},{label:'语言考试还达不到要求'},
+    {label:'经济问题（学费 / 生活费）'},{label:'家里态度还没定'},
+    {label:'不了解申请流程，无从下手'},{label:'其他',input:true}
+  ]},
+  qb5:{ id:'qb5', section:'B 线 · 出国', text:'希望老师帮你什么？', type:'multi', next:'qend1', options:[
+    {label:'了解目标院校 / 专业信息'},{label:'联系在海外的学长学姐'},
+    {label:'奖学金 / 公费留学相关信息'},{label:'不需要，自己在推进'},{label:'其他',input:true}
+  ]},
+  qc1:{ id:'qc1', section:'C 线 · 找工作', text:'对工作最基本的期待是什么？', subtext:'选最重要的一个', type:'single', next:'qc2', options:[
+    {label:'稳定，不担心失业'},{label:'薪资高，挣钱是第一位'},
+    {label:'工作内容有意思，做我喜欢的事'},{label:'能学东西，对未来发展有帮助'},
+    {label:'不要太累，生活和工作要平衡'},{label:'目前没有明确优先级，这些我都想要'},{label:'其他',input:true}
+  ]},
+  qc2:{ id:'qc2', section:'C 线 · 找工作', text:'偏好的公司类型？', type:'multi', next:'qc3', options:[
+    {label:'日资企业'},{label:'欧美外企'},{label:'国企 / 央企'},{label:'互联网 / 科技大厂'},
+    {label:'教育行业（培训机构 / 学校）'},{label:'航空 / 酒店 / 文旅 / 奢侈品'},
+    {label:'政府 / 事业单位 / 考公'},{label:'没想过这个'},{label:'其他',input:true}
+  ]},
+  qc3:{ id:'qc3', section:'C 线 · 找工作', text:'知道自己想做什么岗位吗？', type:'single', options:[
+    {label:'有明确方向',next:'qc3a'},{label:'大概有感觉但不确定',next:'qc3a'},{label:'完全不知道',next:'qc4'}
+  ]},
+  qc3a:{ id:'qc3a', section:'C 线 · 找工作', text:'你的方向大概是？', subtext:'简单说说就行', type:'text', placeholder:'例如：翻译、教育培训、外企行政……', next:'qc4', skippable:false },
+  qc4:{ id:'qc4', section:'C 线 · 找工作', text:'你觉得日语专业毕业能做哪些工作？', type:'single', next:'qc5', options:[
+    {label:'很清楚，对就业方向有清晰认识'},{label:'知道一些，但感觉了解不全'},
+    {label:'几乎不清楚，很迷茫'},{label:'知道能做什么，但不喜欢那些方向'}
+  ]},
+  qc5:{ id:'qc5', section:'C 线 · 找工作', text:'找工作这件事，最大的困惑或恐惧是？', type:'multi', next:'qc6', options:[
+    {label:'不知道日语专业毕业能做什么'},{label:'知道方向但不会执行（简历 / 投递 / 面试）'},
+    {label:'担心自己经历不够、竞争不过别人'},{label:'看到周围人都在动，自己很焦虑但不知道从哪开始'},
+    {label:'已经找到一些机会，但不知道好不好、该不该投'},{label:'其他',input:true}
+  ]},
+  qc6:{ id:'qc6', section:'C 线 · 找工作', text:'现在实际在做什么？', type:'single', next:'qc7', options:[
+    {label:'已经在投简历 / 参加面试'},{label:'目前在实习中'},{label:'在做准备（写简历 / 研究岗位）'},
+    {label:'偶尔刷招聘软件，没有系统去做'},{label:'什么都还没开始'}
+  ]},
+  qc7:{ id:'qc7', section:'C 线 · 找工作', text:'希望老师帮你什么？', type:'multi', next:'qend1', options:[
+    {label:'推荐具体岗位 / 公司方向'},{label:'帮我看简历 / 给建议'},
+    {label:'联系有经验的学长学姐 / 校友'},{label:'模拟面试 / 分享面试经验'},
+    {label:'聊聊方向，帮我捋清楚自己适合什么'},{label:'不需要，自己在推进'},{label:'其他',input:true}
+  ]},
+  qd1:{ id:'qd1', section:'D 线 · 还没想好', text:'主要在纠结什么？', type:'multi', next:'qd2', options:[
+    {label:'考研还是就业'},{label:'国内还是出国'},{label:'完全没方向，啥也不知道'},{label:'其他',input:true}
+  ]},
+  qd2:{ id:'qd2', section:'D 线 · 还没想好', text:'是什么让你还没决定？', type:'multi', next:'qd3', options:[
+    {label:'家里还没商量好'},{label:'对自己能力没把握，不知道哪条路更适合我'},
+    {label:'信息太少，对各个选项都不了解'},{label:'有点拖延，不太想面对这个问题'},
+    {label:'觉得还早，现在不用急着决定'},{label:'其他',input:true}
+  ]},
+  qd3:{ id:'qd3', section:'D 线 · 还没想好', text:'什么能帮你做出决定？', type:'multi', next:'qend1', options:[
+    {label:'有人帮我系统分析各选项的利弊'},{label:'和已经走过这条路的学长学姐聊聊'},
+    {label:'和老师单独聊一次，听听她的判断'},{label:'多了解一些行业 / 院校信息'},
+    {label:'自己想清楚就好，暂时不需要帮助'},{label:'其他',input:true}
+  ]},
+  qend1:{ id:'qend1', section:'最后三题', text:'用1-5分描述你对未来规划的焦虑程度', type:'single', next:'qend2', options:[
+    {label:'1分——完全不焦虑，方向很清晰'},{label:'2分——偶尔担心，但大体有数'},
+    {label:'3分——时常焦虑，想到就有点慌'},{label:'4分——比较焦虑，经常想但找不到方向'},
+    {label:'5分——非常焦虑，不知道自己该怎么办'}
+  ]},
+  qend2:{ id:'qend2', section:'最后三题', text:'王老师随时都很想和大家聊聊，线上线下都可以，没有人来找她的日子她会很伤心的。', subtext:'你可以直接联系她：___（老师填写联系方式）', type:'single', next:'qend2a', options:[
+    {label:'想！有些话想和老师聊，老师来找我'},
+    {label:'可以，老师方便的时候联系我'},
+    {label:'暂时不需要，有需要我会主动找老师'}
+  ]},
+  qend2a:{ id:'qend2a', section:'最后三题', text:'如果方便，可以留一下你的联系方式', subtext:'选填，微信 / 手机 / QQ 都可以', type:'text', placeholder:'例如：微信 xxxxx', next:'qend3', skippable:true },
+  qend3:{ id:'qend3', section:'最后三题', text:'有什么想对老师说的，或者有没有觉得上面的题没问到的？', subtext:'选填，随便写', type:'textarea', placeholder:'写点什么吧～', next:'done', skippable:true }
+};
+
+// ── 状态 ──
+let answers = {}, navHistory = [], submitted = false;
+const TOTAL = 12;
+
+// ── 工具函数 ──
+function answerToStr(v) {
+  if (!v && v !== 0) return '';
+  if (typeof v === 'string') return v;
+  if (Array.isArray(v)) return v.map(i => i.inputVal ? `${i.label}：${i.inputVal}` : i.label).join('；');
+  if (v.label) return v.inputVal ? `${v.label}：${v.inputVal}` : v.label;
+  return String(v);
+}
+
+// ── 渲染 ──
+function show(id) {
+  if (id === 'done') {
+    if (!submitted) { submitted = true; doSubmit(); }
+    renderDone(); return;
+  }
+  const q = Q[id]; if (!q) return;
+  document.getElementById('pFill').style.width = Math.min(96, navHistory.length / TOTAL * 100) + '%';
+  document.getElementById('backBtn').disabled = navHistory.length === 0;
+  const prev = answers[id];
+  let h = '<div class="fade-in">';
+  if (q.section) h += `<div class="section-badge">${q.section}</div>`;
+  h += `<div class="q-text">${q.text}</div>`;
+  if (q.subtext) h += `<div class="q-sub">${q.subtext}</div>`;
+
+  if (q.type === 'text' || q.type === 'textarea') {
+    h += q.type === 'textarea'
+      ? `<textarea class="text-input" id="tIn" placeholder="${q.placeholder||''}"></textarea>`
+      : `<input type="text" class="text-input" id="tIn" placeholder="${q.placeholder||''}">`;
+    h += '<div class="btn-row">';
+    if (q.skippable) h += `<button class="btn btn-skip" onclick="handleText('${id}',true)">跳过</button>`;
+    h += `<button class="btn btn-primary" onclick="handleText('${id}',false)">下一题 →</button></div>`;
+  } else if (q.type === 'single') {
+    const hasInput = q.options.some(o => o.input);
+    h += '<div class="options" id="opts">';
+    q.options.forEach((opt, i) => {
+      const sel = prev && prev.label === opt.label ? ' selected' : '';
+      h += `<div class="option${sel}" id="o${i}" onclick="pickSingle('${id}',${i})">`;
+      h += `<span class="opt-label">${opt.label}</span>`;
+      if (opt.input) {
+        const v = (prev && prev.label === opt.label) ? (prev.inputVal||'') : '';
+        h += `<input class="other-input" id="oi${i}" placeholder="请填写…" value="${v}" onclick="event.stopPropagation()">`;
+      }
+      h += '</div>';
+    });
+    h += '</div>';
+    if (hasInput) h += `<div class="btn-row"><button class="btn btn-primary" onclick="confirmSingle('${id}')">下一题 →</button></div>`;
+  } else if (q.type === 'multi') {
+    h += '<div class="options" id="opts">';
+    q.options.forEach((opt, i) => {
+      const sel = prev && prev.some(p => p.label === opt.label) ? ' selected' : '';
+      const iv = prev ? (prev.find(p => p.label === opt.label)||{}).inputVal||'' : '';
+      h += `<div class="option${sel}" id="o${i}" onclick="toggleMulti(${i})">`;
+      h += `<span class="cb"><svg viewBox="0 0 10 8" fill="none"><polyline points="1,4 4,7 9,1" stroke="white" stroke-width="2"/></svg></span>`;
+      h += `<span class="opt-label">${opt.label}</span>`;
+      if (opt.input) h += `<input class="other-input" id="oi${i}" placeholder="请填写…" value="${iv}" onclick="event.stopPropagation()">`;
+      h += '</div>';
+    });
+    h += '</div>';
+    h += `<div class="btn-row"><button class="btn btn-primary" onclick="confirmMulti('${id}')">下一题 →</button></div>`;
+  }
+  h += '</div>';
+  document.getElementById('content').innerHTML = h;
+  const tIn = document.getElementById('tIn');
+  if (tIn) { if (prev) tIn.value = prev; setTimeout(() => tIn.focus(), 80); }
+}
+
+function pickSingle(qId, i) {
+  const q = Q[qId], opt = q.options[i];
+  if (opt.input || q.options.some(o => o.input)) {
+    document.querySelectorAll('.option').forEach(el => el.classList.remove('selected'));
+    document.getElementById('o'+i).classList.add('selected');
+    if (opt.input) setTimeout(() => document.getElementById('oi'+i)?.focus(), 50);
+    return;
+  }
+  answers[qId] = {label: opt.label, inputVal: ''};
+  navHistory.push(qId);
+  show(opt.next || q.next);
+}
+
+function confirmSingle(qId) {
+  const q = Q[qId];
+  const sel = document.querySelector('.option.selected');
+  if (!sel) return shake('opts');
+  const i = parseInt(sel.id.replace('o',''));
+  const opt = q.options[i];
+  const inputVal = opt.input ? (document.getElementById('oi'+i)?.value?.trim()||'') : '';
+  if (opt.input && !inputVal) { document.getElementById('oi'+i)?.focus(); return; }
+  answers[qId] = {label: opt.label, inputVal};
+  navHistory.push(qId);
+  show(opt.next || q.next);
+}
+
+function toggleMulti(i) { document.getElementById('o'+i)?.classList.toggle('selected'); }
+
+function confirmMulti(qId) {
+  const q = Q[qId];
+  const selected = [];
+  q.options.forEach((opt, i) => {
+    if (document.getElementById('o'+i)?.classList.contains('selected')) {
+      selected.push({label: opt.label, inputVal: opt.input ? (document.getElementById('oi'+i)?.value?.trim()||'') : ''});
+    }
+  });
+  if (!selected.length) return shake('opts');
+  answers[qId] = selected;
+  navHistory.push(qId);
+  show(q.next);
+}
+
+function handleText(qId, skip) {
+  const q = Q[qId];
+  const val = document.getElementById('tIn')?.value?.trim() || '';
+  if (!skip && q.required && !val) { shake('tIn'); return; }
+  answers[qId] = skip ? '' : val;
+  navHistory.push(qId);
+  show(q.next);
+}
+
+function goBack() {
+  if (!navHistory.length) return;
+  show(navHistory.pop());
+}
+
+function shake(id) {
+  const el = document.getElementById(id); if (!el) return;
+  let n = 0;
+  const t = setInterval(() => {
+    el.style.transform = `translateX(${n%2===0?-5:5}px)`;
+    if (++n > 5) { clearInterval(t); el.style.transform = ''; }
+  }, 50);
+}
+
+function renderDone() {
+  document.getElementById('pFill').style.width = '100%';
+  document.getElementById('backBtn').disabled = true;
+  document.getElementById('content').innerHTML = `
+    <div class="done-wrap fade-in">
+      <div class="done-icon">
+        <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+          <polyline points="6,18 14,26 30,10" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="done-title">提交成功！</div>
+      <div class="done-sub">谢谢你认真填写<br>老师看到之后会联系你的</div>
+    </div>`;
+}
+
+async function doSubmit() {
+  const payload = {
+    name: answers['start'] || '',
+    class_name: answers['start_class'] || '',
+    direction: answerToStr(answers['q1']),
+    anxiety_level: answerToStr(answers['qend1']),
+    wants_chat: answerToStr(answers['qend2']),
+    contact: answers['qend2a'] || '',
+    message: answers['qend3'] || '',
+    full_answers: answers
+  };
+  try {
+    await fetch(`${SUPABASE_URL}/rest/v1/responses`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify(payload)
+    });
+  } catch(e) { console.error(e); }
+}
+
+show('start');
+</script>
+</body>
+</html>
