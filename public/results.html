@@ -107,6 +107,18 @@ body { font-family: '宋体', SimSun, serif; background: #f0f4f8; min-height: 10
 .detail-a { font-size: 14px; color: #1a2b3c; line-height: 1.5; }
 .empty { text-align: center; padding: 48px; color: #bbb; font-size: 15px; }
 
+/* 花名册 */
+.roster-section { background: #fff; border-radius: 14px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); padding: 20px; margin-bottom: 24px; }
+.roster-title { font-size: 15px; font-weight: bold; color: #1a2b3c; margin-bottom: 16px; }
+.roster-count { color: #2d6a9f; }
+.roster-not-done { color: #e05; margin-left: 10px; font-size: 13px; font-weight: normal; }
+.roster-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(76px,1fr)); gap: 8px; }
+.roster-cell { padding: 8px 4px; border-radius: 8px; text-align: center; font-size: 13px; line-height: 1.5; }
+.roster-cell.done { background: #e8f5e9; color: #2e7d32; font-weight: bold; }
+.roster-cell.pending { background: #f5f5f5; color: #bbb; }
+.roster-num { font-size: 10px; display: block; color: #ccc; }
+.roster-cell.done .roster-num { color: #a5d6a7; }
+
 @media (max-width: 700px) {
   .table-head, .table-row { grid-template-columns: 80px 90px 90px 1fr 44px; }
   .col-anxiety, .col-contact { display: none; }
@@ -132,6 +144,8 @@ body { font-family: '宋体', SimSun, serif; background: #f0f4f8; min-height: 10
 
   <div class="stats-grid" id="statsGrid"></div>
 
+  <div id="rosterWrap"></div>
+
   <div class="filter-row" id="filterRow">
     <button class="filter-btn active" onclick="setFilter('全部')">全部</button>
     <button class="filter-btn" onclick="setFilter('考研')">考研</button>
@@ -154,6 +168,8 @@ body { font-family: '宋体', SimSun, serif; background: #f0f4f8; min-height: 10
 </div>
 
 <script>
+const ROSTER = ['刘杨','王煦蕾','仵婧萱','郭梓桐','张申','金晓晗','徐艺菲','王子嫣','傅琬婷','韩乐琪','杨斯凡','李宇涵','韩依雯','杜鑫宇','何佳澄','庞静怡','李思颖','韩美冰','高家阳','王艺舟','刘怡琳','仉靖','龚源','夏侯皓昀','段菁锐','高伊诺','康景淇','邳羽彤','佟博阳','马千寻','何子豪','许荟琳','孙安可','张帆扬','韩子昊','周昕仪','宋晓可','温梓琦','李清扬','石若惜','落亚炫','全耶演','王婉亭','郭筱雅','唐浩然','陈文君','吴玉惠','何琴','黄韵涵','彭佳睿','杨欣雨','马欣郁','孙浩轩','胡凯轩','秘鹤轩','刘雅霖','王佳一','张鑫宇','杨溢','刘禹言','董佳涵','魏喆','王翊','张帅','刘思语','闫傑文','迟鲁艺','郭思睿','凌佳莹','陈沛青','周宛苏','唐凯风','陈舒扬','陈写意','张浩然','陈睿楠','刘瑞杰','余佳怡','钱奕睿','廖常青','杨子瑾','李维真','耿笠钧'];
+
 const QLABELS = {
   start:'姓名', start_class:'班级', q1:'方向',
   qa1:'考研方向', qa2:'备考时长', qa3:'每日时长', qa4:'备考困难', qa5:'考研原因', qa6:'希望老师帮（考研）',
@@ -218,7 +234,29 @@ async function doLogin() {
   document.getElementById('loginWrap').style.display = 'none';
   document.getElementById('mainWrap').style.display = 'block';
   renderStats();
+  renderRoster();
   renderTable(allData);
+}
+
+function renderRoster() {
+  const submittedNames = new Set(allData.map(r => r.name?.trim()).filter(Boolean));
+  const doneCount = ROSTER.filter(n => submittedNames.has(n)).length;
+  const notDone = ROSTER.filter(n => !submittedNames.has(n));
+  document.getElementById('rosterWrap').innerHTML = `
+    <div class="roster-section">
+      <div class="roster-title">
+        完成情况 <span class="roster-count">${doneCount}/${ROSTER.length}</span>
+        ${notDone.length ? `<span class="roster-not-done">未填：${notDone.join('、')}</span>` : '<span style="color:#2e7d32;font-size:13px;margin-left:10px">✓ 全部完成！</span>'}
+      </div>
+      <div class="roster-grid">
+        ${ROSTER.map((name, i) => {
+          const done = submittedNames.has(name);
+          return `<div class="roster-cell ${done ? 'done' : 'pending'}">
+            <span class="roster-num">${i+1}</span>${name}${done ? ' ✓' : ''}
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
 }
 
 function renderStats() {
