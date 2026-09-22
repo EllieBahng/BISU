@@ -8,7 +8,7 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body {
   font-family: '宋体', SimSun, serif;
-  background: linear-gradient(135deg, #e8f0fe 0%, #f0f4f8 100%);
+  background: #f4f6f9;
   min-height: 100vh;
   display: flex;
   align-items: center;
@@ -27,11 +27,11 @@ body {
 }
 .top-bar { display: flex; align-items: center; margin-bottom: 24px; gap: 12px; }
 .back-btn {
-  background: none; border: none; color: #bbb; font-size: 20px;
-  cursor: pointer; padding: 2px 8px; border-radius: 6px;
-  transition: all 0.15s; font-family: inherit; flex-shrink: 0;
+  background: #eef4fb; border: none; color: #2d6a9f; font-size: 13px;
+  cursor: pointer; padding: 6px 12px; border-radius: 8px;
+  transition: all 0.15s; font-family: inherit; flex-shrink: 0; font-weight: bold;
 }
-.back-btn:hover { background: #f0f4f8; color: #555; }
+.back-btn:hover { background: #ddeaf7; }
 .back-btn:disabled { opacity: 0; pointer-events: none; }
 .progress-wrap { flex: 1; height: 5px; background: #e8edf2; border-radius: 3px; overflow: hidden; }
 .progress-fill { height: 100%; background: linear-gradient(90deg,#2d6a9f,#5b9fd4); border-radius: 3px; transition: width 0.4s ease; }
@@ -99,7 +99,7 @@ textarea.text-input:focus { border-color: #2d6a9f; }
 <body>
 <div class="card">
   <div class="top-bar">
-    <button class="back-btn" id="backBtn" onclick="goBack()" disabled>←</button>
+    <button class="back-btn" id="backBtn" onclick="goBack()" disabled>← 上一题</button>
     <div class="progress-wrap"><div class="progress-fill" id="pFill" style="width:0%"></div></div>
   </div>
   <div id="content"></div>
